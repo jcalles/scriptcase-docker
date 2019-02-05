@@ -1,0 +1,52 @@
+version: '2'
+services:
+ aplications:
+   image: tianon/true
+   volumes:
+     - "./logs:/var/logs/apache2"
+     - "./data:/var/www/html/"
+ logs:
+    image: javiercalles/wtee    
+    container_name: scriptcase-logs
+    tty: true
+    ports:
+      - "8080:8080"
+    volumes_from:
+      - aplications
+    environment:
+      - LOGPATH=/var/logs/apache2/
+
+ app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    privileged: true
+    container_name: scriptcase-app
+    hostname: scriptcase
+    mem_limit: "2G"
+    image: javiercalles/scriptcase9-php7
+    links:
+     - db
+    depends_on: 
+     - db   
+    ports:
+      - "8090:80"
+      - "2222:22"
+    restart: always
+    tty: true
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    volumes_from:
+      - aplications
+    
+ db:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+      MYSQL_ROOT_HOST: '%'
+    ports:
+     - "3306:3306"
